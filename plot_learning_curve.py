@@ -28,13 +28,3 @@ def plot_learning_curve(model, title, X, Y,  ylim = None,
 
 	plt.legend(loc = 'best')
 	plt.show()
-
-
-
-
-#title = 'Learning Curve (Logistic regression)'
-
-#cv = ShuffleSplit(n_splits = 200, test_size = 0.3, random_state = 0)
-
-#model = linear_model.LogisticRegression()
-#plot_learning_curve(model, title, X_train, Y_train, ylim = (0.7,1.01), cv =cv, n_jobs = -1)

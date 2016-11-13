@@ -1,0 +1,1 @@
+Since the data is contiguous, we are splitting the data into random parts for training and testing, using shuffle_split.

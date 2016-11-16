@@ -7,3 +7,5 @@ CAP5510 - Bioinformatics
 * Get insights of data
 * Implement 3 different methods of feature selection
 * Implement 3 different classifiers
+  
+k means ,Baiyes Naive

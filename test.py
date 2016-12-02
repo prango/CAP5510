@@ -9,6 +9,7 @@ import plot_learning_curve as plc
 import plot_confusion_matrix as pcm
 import matplotlib.pyplot as plt
 from pandas.tools.plotting import parallel_coordinates, radviz
+import warnings
 
 
 #get data in useful form
@@ -41,23 +42,28 @@ def get_data(filename):
 	#dropping non-classifiable data such as post-surgery data, since we don't 
 	#know whether cancer was found in the later diagnosis or not
 	data_to_drop = df_type[df_type['!Sample_title'].str.contains
-		('post-surgery') == True].axes
+		('post-surgery|ectopic') == True].axes
 	indices_to_drop = data_to_drop[0].values
 	updated_indices = np.apply_along_axis(lambda x: x - 1, 0, indices_to_drop)
 	df_type.drop(df_type.index[updated_indices], inplace = True)
 	df.drop(df.index[updated_indices], inplace = True)
 
 	#changing df_type to classes
-	healthy = df_type[df_type['!Sample_title'].str.contains
-		('healthy|normal|ctrl') == True]
-	cancer_patients = df_type[df_type['!Sample_title'].str.contains
-		('healthy|normal|ctrl') != True]
-	#assigning all types of healthies to healthy class
-	df_type.replace(to_replace = healthy, value = 'Healthy', inplace = True)
-	#assigning all types of cancer to a single cancer class
-	df_type.replace(to_replace = cancer_patients, value = 'Cancer', 
-		inplace = True)
-	class_names = ['Healthy', 'Cancer']
+	classes = np.array(['pbmc_normal','pbmc_malignant','pbmc_benign',
+		'lung cancer', 'lung normal'])
+	class_names = np.array(['Normal Patient', 'Malignant Breast Cancer', 
+		'Benign Breast Cancer', 'Lung Cancer', 'Normal Patient'])
+	class_names_final = []
+	num_of_classes = np.size(classes)
+	for i in range(0,num_of_classes):
+		#try:
+		class_find = df_type[df_type['!Sample_title'].str.contains
+		(classes[i]) == True]
+		#print class_find.size
+		if class_find.size != 0:
+			df_type.replace(to_replace = class_find, value = class_names[i], 
+				inplace = True)
+			class_names_final.append(class_names[i])
 
 	#filling values for Nans on the basis of mean of corresponding feature
 	#imp = Imputer(missing_values = 'NaN', strategy = 'mean', axis = 0)
@@ -68,7 +74,7 @@ def get_data(filename):
 	X = np.array(df)
 	#print type(df)
 	Y = np.array(df_type)
-	return X, Y, df, df_type, class_names
+	return X, Y, df, df_type, class_names_final
 
 #visualize data
 def visualize_data(X, df, df_type):
@@ -180,18 +186,20 @@ def predict_output(clf, X):
 
 
 def main():
+	warnings.filterwarnings("ignore")
 	X, Y, df, df_type, class_names = get_data(
-		'/Users/GodSpeed/Documents/Courses/Bioinformatics/Project/Datasets/GSE59856_series_matrix.txt')
+		'/Users/GodSpeed/Documents/Courses/Bioinformatics/Project/Datasets/GSE19804_series_matrix.txt')
 	#print df.head()
 	df.dropna(axis = 1, how = 'any', inplace = True)
+	#print df_type
 	#print type(X)
 
-	#visualize_data(X, df, df_type)
+	visualize_data(X, df, df_type)
 
-	#feature_importance_order = feature_select_var(df_type, X, Y)
+	feature_importance_order = feature_select_var(df_type, X, Y)
 
 	feature_importance_order = feature_select_std(X)
-	X = X[:,np.array(feature_importance_order[0:200])]
+	X = X[:,np.array(feature_importance_order[0:200])]	#selecting only top 200 important features
 
 	#print type(X)
 	#print np.shape(X)
@@ -203,10 +211,10 @@ def main():
 
 	clf = KNeighborsClassifier( n_neighbors = 3)
 
-	#title = 'Learning Curve (KNeighborsClassifier) initial results'
+	title = 'Learning Curve (KNeighborsClassifier) initial results'
 	#cv = ShuffleSplit(n_splits = 100, test_size = 0.2, random_state = 42)
 	#plc.plot_learning_curve(clf, title, X, Y.ravel(), ylim = (0.1,1.01), 
-	#		cv = cv, n_jobs = 1, scoring = 'accuracy')
+#			cv = cv, n_jobs = 1, scoring = 'accuracy')
 
 	trained_clf = train_model(clf, X_train, Y_train)
 	Y_pred = predict_output(trained_clf, X)

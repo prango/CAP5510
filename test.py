@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 from pandas.tools.plotting import parallel_coordinates, radviz
 import warnings
 
+#using data sets 32474, 19804, 27562, 59856
+
 
 #get data in useful form
 def get_data(filename):
@@ -41,29 +43,38 @@ def get_data(filename):
 
 	#dropping non-classifiable data such as post-surgery data, since we don't 
 	#know whether cancer was found in the later diagnosis or not
+	#dropping liver from 59856 as only 2 samples exist
 	data_to_drop = df_type[df_type['!Sample_title'].str.contains
-		('post-surgery|ectopic') == True].axes
+		('post-surgery|ectopic|pr:|liver') == True].axes	
 	indices_to_drop = data_to_drop[0].values
 	updated_indices = np.apply_along_axis(lambda x: x - 1, 0, indices_to_drop)
 	df_type.drop(df_type.index[updated_indices], inplace = True)
 	df.drop(df.index[updated_indices], inplace = True)
 
 	#changing df_type to classes
-	classes = np.array(['pbmc_normal','pbmc_malignant','pbmc_benign',
-		'lung cancer', 'lung normal'])
-	class_names = np.array(['Normal Patient', 'Malignant Breast Cancer', 
-		'Benign Breast Cancer', 'Lung Cancer', 'Normal Patient'])
+	classes = np.array(['normal', 'pbmc_malignant', 'pbmc_benign',
+		'lung cancer', 'br:', 'cns:', 'co:', 'le:', 'me:', 'lc:',
+		'ov:', 're:', 'pancreatic','biliary tract','healthy', 'control', 
+		'colon', 'stomach','esophagus'])
+	classes_to_names = {'normal':'Normal Patient', 'pbmc_malignant':
+	'Malignant Breast Cancer', 'pbmc_benign':'Benign Breast Cancer',
+	'lung cancer':'Lung cancer', 'br:':'Breast', 'cns:':
+	'Central Nervous System', 'co:':'Colon','le:':'Leukamia', 'me:':'Melanoma',
+	'lc:':'Non-small cell Lung', 'ov:':'Ovarian', 're:':'Renal','pancreatic':
+	'Pancreatic', 'biliary tract':'Biliary Tract', 'healthy':'Normal Patient',
+	'control':'Normal Patient', 'colon':'Colon', 'stomach':'Stomach', 
+	'esophagus':'Esophagus'}
 	class_names_final = []
-	num_of_classes = np.size(classes)
+	num_of_classes = len(classes)
 	for i in range(0,num_of_classes):
 		#try:
 		class_find = df_type[df_type['!Sample_title'].str.contains
 		(classes[i]) == True]
 		#print class_find.size
 		if class_find.size != 0:
-			df_type.replace(to_replace = class_find, value = class_names[i], 
+			df_type.replace(to_replace = class_find, value = classes_to_names[classes[i]], 
 				inplace = True)
-			class_names_final.append(class_names[i])
+			class_names_final.append(classes_to_names[classes[i]])
 
 	#filling values for Nans on the basis of mean of corresponding feature
 	#imp = Imputer(missing_values = 'NaN', strategy = 'mean', axis = 0)
@@ -188,7 +199,7 @@ def predict_output(clf, X):
 def main():
 	warnings.filterwarnings("ignore")
 	X, Y, df, df_type, class_names = get_data(
-		'/Users/GodSpeed/Documents/Courses/Bioinformatics/Project/Datasets/GSE19804_series_matrix.txt')
+		'/Users/GodSpeed/Documents/Courses/Bioinformatics/Project/Datasets/GSE59856_series_matrix.txt')
 	#print df.head()
 	df.dropna(axis = 1, how = 'any', inplace = True)
 	#print df_type

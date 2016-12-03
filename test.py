@@ -1,91 +1,19 @@
 import pandas as pd
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import normalize
 from sklearn.model_selection import train_test_split, ShuffleSplit
 #from sklearn.model_selection import cross_val_score
 from sklearn.metrics import accuracy_score, confusion_matrix
 #from sklearn.preprocessing import Imputer
+import get_data
 import plot_learning_curve as plc
 import plot_confusion_matrix as pcm
 import matplotlib.pyplot as plt
 from pandas.tools.plotting import parallel_coordinates, radviz
 import warnings
 
-#using data sets 32474, 19804, 27562, 59856
-
-
-#get data in useful form
-def get_data(filename):
-	#taking row_nums of samples and samples' classes
-	with open(filename) as myFile:
-		for num, line in enumerate(myFile, 1):
-			if '!Sample_title' in line:
-				classes_row = num
-			if '!series_matrix_table_begin' in line:
-				samples_begin = num
-
-	#print classes_row
-    #taking samples' classes
-	df_type = (pd.read_csv(filename, sep = "\t", skiprows = classes_row - 1,
-		 nrows = 1, header = None)).transpose()
-	df_type.columns = df_type.iloc[0]
-	df_type = df_type[1:]
-	#df_type.drop(df_type[:1], inplace = True)
-	#print type(df_type[0])
-	df_type['!Sample_title'] = df_type['!Sample_title'].str.lower()
-
-	#taking samples
-	df = (pd.read_csv(filename, sep = "\t", skiprows = samples_begin + 1,
-		 header = None)).transpose()
-	df.columns = df.iloc[0]
-	df = df[1:]
-	df.dropna(axis = 1, how = 'all', inplace = True)
-
-	#dropping non-classifiable data such as post-surgery data, since we don't 
-	#know whether cancer was found in the later diagnosis or not
-	#dropping liver from 59856 as only 2 samples exist
-	data_to_drop = df_type[df_type['!Sample_title'].str.contains
-		('post-surgery|ectopic|pr:|liver') == True].axes	
-	indices_to_drop = data_to_drop[0].values
-	updated_indices = np.apply_along_axis(lambda x: x - 1, 0, indices_to_drop)
-	df_type.drop(df_type.index[updated_indices], inplace = True)
-	df.drop(df.index[updated_indices], inplace = True)
-
-	#changing df_type to classes
-	classes = np.array(['normal', 'pbmc_malignant', 'pbmc_benign',
-		'lung cancer', 'br:', 'cns:', 'co:', 'le:', 'me:', 'lc:',
-		'ov:', 're:', 'pancreatic','biliary tract','healthy', 'control', 
-		'colon', 'stomach','esophagus'])
-	classes_to_names = {'normal':'Normal Patient', 'pbmc_malignant':
-	'Malignant Breast Cancer', 'pbmc_benign':'Benign Breast Cancer',
-	'lung cancer':'Lung cancer', 'br:':'Breast', 'cns:':
-	'Central Nervous System', 'co:':'Colon','le:':'Leukamia', 'me:':'Melanoma',
-	'lc:':'Non-small cell Lung', 'ov:':'Ovarian', 're:':'Renal','pancreatic':
-	'Pancreatic', 'biliary tract':'Biliary Tract', 'healthy':'Normal Patient',
-	'control':'Normal Patient', 'colon':'Colon', 'stomach':'Stomach', 
-	'esophagus':'Esophagus'}
-	class_names_final = []
-	num_of_classes = len(classes)
-	for i in range(0,num_of_classes):
-		#try:
-		class_find = df_type[df_type['!Sample_title'].str.contains
-		(classes[i]) == True]
-		#print class_find.size
-		if class_find.size != 0:
-			df_type.replace(to_replace = class_find, value = classes_to_names[classes[i]], 
-				inplace = True)
-			class_names_final.append(classes_to_names[classes[i]])
-
-	#filling values for Nans on the basis of mean of corresponding feature
-	#imp = Imputer(missing_values = 'NaN', strategy = 'mean', axis = 0)
-	#imp.fit(df)
-	#X = imp.transform(df)
-	#df = pd.DataFrame(df)
-	df.dropna(axis = 1, how = 'any', inplace = True)
-	X = np.array(df)
-	#print type(df)
-	Y = np.array(df_type)
-	return X, Y, df, df_type, class_names_final
+#using data sets 32474, 19804, 27562, 59856, 33315
 
 #visualize data
 def visualize_data(X, df, df_type):
@@ -98,7 +26,7 @@ def visualize_data(X, df, df_type):
 	dv = pd.DataFrame(np.array([probe, variance, mn, sd]), 
 		index = ['Probe', 'Variance', 'Mean', 'Standard Deviation'])
 	dv.sort_values('Variance', axis = 1, ascending = False, inplace = True)
-	print dv
+	#print dv
 	
 	"""visualizing the variance of features"""
 	xlength = np.arange(np.shape(variance)[0])
@@ -155,20 +83,34 @@ def visualize_data(X, df, df_type):
 	plt.show()
 
 #selecting features
-def feature_select_var(df_type, X, Y):						#univariate supervised since it looks at features in isolation
-	samples_healthy = np.where(Y == 'Healthy')[0]
-	samples_cancer = np.where(Y == 'Cancer')[0]
-	variance_healthy = np.var(X[samples_healthy], axis = 0)
-	variance_cancer = np.var(X[samples_cancer], axis = 0)
-	mean_healthy = np.mean(X[samples_healthy], axis = 0)
-	mean_cancer = np.var(X[samples_cancer], axis = 0)
-	feature_importance = pd.DataFrame((variance_healthy + variance_cancer)
-		/abs(mean_healthy - mean_cancer))			#the lower, the better
+def feature_select_var(X, Y, df_type, class_names):						
+#univariate supervised since it looks at features in isolation
+	samples_type = []
+	class_variance = []
+	#class_std = []
+	class_mean = []
+	mean_classes = []
+	num_of_classes = np.size(class_names)
+	for classes in class_names:
+		samples_type = np.where(Y == classes)[0]
+		class_variance.append(np.var(X[samples_type], axis = 0))
+		#class_std.append(np.std(np.float64(X[samples_type]), axis = 0))
+		class_mean.append(np.mean(X[samples_type], axis = 0))
+	#print np.shape(class_variance)
+	#print class_std
+	#print X.shape[1]
+	feature_dist = np.zeros(X.shape[1])
+	for i in range(num_of_classes):
+		feature_dist = np.subtract(feature_dist, class_mean[i][:])
+	#print np.shape(feature_dist)
+	feature_importance = pd.DataFrame(abs(np.sum(class_variance, axis = 0)/feature_dist))
+			#the lower, the better
 	feature_importance.sort_values(0, axis = 0, ascending = True, 
 		inplace = True)
 	feature_importance_order = pd.DataFrame(feature_importance.axes)
 	feature_importance_order = np.array(feature_importance_order.loc[0,:])
 	feature_importance_order = feature_importance_order.astype(int)
+	#print feature_importance_order
 	#print X[:,np.array(feature_importance_order[0:5])]
 	return feature_importance_order
 
@@ -198,20 +140,31 @@ def predict_output(clf, X):
 
 def main():
 	warnings.filterwarnings("ignore")
-	X, Y, df, df_type, class_names = get_data(
-		'/Users/GodSpeed/Documents/Courses/Bioinformatics/Project/Datasets/GSE59856_series_matrix.txt')
+	#get data in useful form [samples X features]
+	X, Y, df, df_type, class_names = get_data.get_data(
+		'/Users/GodSpeed/Documents/Courses/Bioinformatics/Project/Datasets/GSE33315_series_matrix.txt')
 	#print df.head()
 	df.dropna(axis = 1, how = 'any', inplace = True)
-	#print df_type
+	#print np.shape(X)
+	#unique, counts = np.unique(Y, return_counts=True)
+	#print np.asarray((unique, counts)).T
+
+
 	#print type(X)
 
-	visualize_data(X, df, df_type)
+	#X = normalize(X, axis = 1, copy = False)
+	#print X
 
-	feature_importance_order = feature_select_var(df_type, X, Y)
+	#visualize_data(X, df, df_type)
+	#X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size = 0.2)
+	#feature_importance_order = feature_select_var(X_train, Y_train, df_type, class_names)
+	#feature_importance_order = feature_select_var(X, Y, df_type, class_names)
 
-	feature_importance_order = feature_select_std(X)
-	X = X[:,np.array(feature_importance_order[0:200])]	#selecting only top 200 important features
-
+	#feature_importance_order = feature_select_std(X)
+	#X = X[:,np.array(feature_importance_order[0:200])]	#selecting only top 200 important features
+	#X_train = X_train[:,np.array(feature_importance_order[0:150])]
+	#X_test = X_test[:,np.array(feature_importance_order[0:150])]
+	#print X.shape
 	#print type(X)
 	#print np.shape(X)
 	
@@ -229,8 +182,8 @@ def main():
 
 	trained_clf = train_model(clf, X_train, Y_train)
 	Y_pred = predict_output(trained_clf, X)
-	pcm.main(Y, Y_pred, class_names)
-	#print cross_val_score(clf, X, Y.ravel(), cv = cv)
+	#pcm.main(Y, Y_pred, class_names)
+
 	print accuracy_score(Y, Y_pred, normalize = True)
 	print np.around(trained_clf.score(X, Y), decimals = 2)
 	#print trained_clf.kneighbors(X, n_neighbors = 3)

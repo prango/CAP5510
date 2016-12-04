@@ -1,11 +1,13 @@
+"""This is an implementaion of K nearest neighbors, before which we are analyzing 
+the data also in the same script"""
+
 import pandas as pd
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import normalize
 from sklearn.model_selection import train_test_split, ShuffleSplit
-#from sklearn.model_selection import cross_val_score
-from sklearn.metrics import accuracy_score, confusion_matrix
-#from sklearn.preprocessing import Imputer
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import accuracy_score, confusion_matrix, f1_score
 import get_data
 import plot_learning_curve as plc
 import plot_confusion_matrix as pcm
@@ -126,7 +128,6 @@ def feature_select_std(X):					#unsupervised
 	#print feature_importance
 	return feature_importance_order
 
-
 #train the model on training data
 def train_model(clf, X, Y):
 	clf.fit(X,Y.ravel())
@@ -142,50 +143,37 @@ def main():
 	warnings.filterwarnings("ignore")
 	#get data in useful form [samples X features]
 	X, Y, df, df_type, class_names = get_data.get_data(
-		'/Users/GodSpeed/Documents/Courses/Bioinformatics/Project/Datasets/GSE33315_series_matrix.txt')
-	#print df.head()
-	df.dropna(axis = 1, how = 'any', inplace = True)
-	#print np.shape(X)
-	#unique, counts = np.unique(Y, return_counts=True)
-	#print np.asarray((unique, counts)).T
-
-
-	#print type(X)
-
-	#X = normalize(X, axis = 1, copy = False)
+		'/Users/GodSpeed/Documents/Courses/Bioinformatics/Project/Datasets/GSE19804_series_matrix.txt')
+	print np.shape(X)
+	X = normalize(X, axis = 1, copy = False)
 	#print X
 
 	#visualize_data(X, df, df_type)
-	#X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size = 0.2)
+	X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size = 0.2)
 	#feature_importance_order = feature_select_var(X_train, Y_train, df_type, class_names)
 	#feature_importance_order = feature_select_var(X, Y, df_type, class_names)
 
-	#feature_importance_order = feature_select_std(X)
-	#X = X[:,np.array(feature_importance_order[0:200])]	#selecting only top 200 important features
+	feature_importance_order = feature_select_std(X)
+	#X = X[:,np.array(feature_importance_order[0:500])]	#selecting only top 200 important features
 	#X_train = X_train[:,np.array(feature_importance_order[0:150])]
 	#X_test = X_test[:,np.array(feature_importance_order[0:150])]
-	#print X.shape
-	#print type(X)
-	#print np.shape(X)
-	
-	#print type(feature_importance_order)#[2,1:5]
-	#print X[:,select_features]
 
-	X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size = 0.2)
+	#X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size = 0.2)
 
-	clf = KNeighborsClassifier( n_neighbors = 3)
+	clf = KNeighborsClassifier( n_neighbors = 1)
 
 	title = 'Learning Curve (KNeighborsClassifier) initial results'
 	#cv = ShuffleSplit(n_splits = 100, test_size = 0.2, random_state = 42)
 	#plc.plot_learning_curve(clf, title, X, Y.ravel(), ylim = (0.1,1.01), 
-#			cv = cv, n_jobs = 1, scoring = 'accuracy')
+	#		cv = cv, n_jobs = 1, scoring = 'accuracy')
 
 	trained_clf = train_model(clf, X_train, Y_train)
-	Y_pred = predict_output(trained_clf, X)
-	#pcm.main(Y, Y_pred, class_names)
+	Y_pred = predict_output(trained_clf, X_test)
+	#pcm.main(Y_test, Y_pred, class_names)
 
-	print accuracy_score(Y, Y_pred, normalize = True)
-	print np.around(trained_clf.score(X, Y), decimals = 2)
+	#print accuracy_score(Y, Y_pred, normalize = True)
+	#print np.around(trained_clf.score(X, Y), decimals = 2)
+	print "F1-score of classification is ", np.around(f1_score(Y_test, Y_pred, average = 'weighted'), decimals = 2)
 	#print trained_clf.kneighbors(X, n_neighbors = 3)
 	#print clf.get_params()
 

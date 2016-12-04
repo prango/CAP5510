@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from sklearn.preprocessing import Imputer
 
 
 """This function is to extract the unprocessed data from the datasets
@@ -34,6 +35,7 @@ def get_data(filename):
 	"""dropping non-classifiable data such as post-surgery data, since we don't 
 	#know whether cancer was found in the later diagnosis or not
 	#dropping liver from 59856 as only 2 samples exist"""
+
 	data_to_drop = df_type[df_type['!Sample_title'].str.contains
 		('post-surgery|ectopic|pr:|liver|cd10cd19|cd34|sjdown|sjball|sjinf|sjmll')
 		 == True].axes	
@@ -71,10 +73,10 @@ def get_data(filename):
 			class_names_final.append(classes_to_names[classes[i]])
 
 	#filling values for Nans on the basis of mean of corresponding feature
-	#imp = Imputer(missing_values = 'NaN', strategy = 'mean', axis = 0)
-	#imp.fit(df)
-	#X = imp.transform(df)
-	#df = pd.DataFrame(df)
+	imp = Imputer(missing_values = 'NaN', strategy = 'mean', axis = 0)
+	imp.fit(df)
+	X = imp.transform(df)
+	df = pd.DataFrame(df)
 	df.dropna(axis = 1, how = 'any', inplace = True)
 	X = np.array(df)
 	#print type(df)

@@ -18,12 +18,12 @@ def plot_confusion_matrix(cm, classes, normalize=False,
     plt.yticks(tick_marks, classes)
 
     if normalize:
-        cm = np.around((cm.astype('float') / cm.sum(axis=1)) * 100, decimals = 2)
+        cm = np.around(np.transpose((np.transpose(cm.astype('float')) 
+          / cm.sum(axis=1))) * 100, decimals = 2)
         print("Percentage confusion matrix")
     else:
         print('Confusion matrix, without normalization')
-
-    print(cm)
+    print cm
 
     c = np.array([[0] * cm.shape[0]] * cm.shape[1])    
     for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):

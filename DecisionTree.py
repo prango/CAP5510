@@ -60,6 +60,7 @@ def main():
 	X = normalize(X, axis = 1, copy = False)
 	#print X
 	X=feature_reduce_chi2(X,Y,100)
+	#X= feature_reduce_mic(X,Y,100)
 
 	#visualize_data(X, df, df_type)
 	X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size = 0.2)

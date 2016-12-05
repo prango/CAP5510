@@ -33,8 +33,8 @@ def get_data(filename):
 	df.dropna(axis = 1, how = 'all', inplace = True)
 
 	"""dropping non-classifiable data such as post-surgery data, since we don't 
-	#know whether cancer was found in the later diagnosis or not
-	#dropping liver from 59856 as only 2 samples exist"""
+	know whether cancer was found in the later diagnosis or not
+	dropping liver from 59856 as only 2 samples exist"""
 
 	data_to_drop = df_type[df_type['!Sample_title'].str.contains
 		('post-surgery|ectopic|pr:|liver|cd10cd19|cd34|sjdown|sjball|sjinf|sjmll')

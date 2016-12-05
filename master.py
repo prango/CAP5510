@@ -36,7 +36,8 @@ def main(argv):
 		X = X[:, np.array(feature_importance_order[0:num_of_dims])]
 	elif feature_selection == 'chi':
 		X = Naive_Bayes.feature_reduce(X, Y, num_of_dims)
-	#elif feature_selection == :	#for pranav's method
+	elif feature_selection == 'mutual_info_clf':
+		X = DecisionTree.feature_reduce_mic(X, Y, num_of_dims)	#for pranav's method
 
 	
 	#splitting data into training and testing set

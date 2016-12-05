@@ -18,15 +18,7 @@ import matplotlib.pyplot as plt
 from pandas.tools.plotting import parallel_coordinates, radviz
 import warnings
 
-#using data sets 32474, 19804, 27562, 59856, 33315
-#Feature reduction with Chi2
-def feature_reduce_chi2(X,Y,num_features_to_keep):
-    #use the chi-squared method to reduce features and reshape data
-    test = SelectKBest(score_func=chi2, k=num_features_to_keep)
-    fit = test.fit(X,Y)
-    
-    #return the data with reduced features 
-    return fit.transform(X)
+#using data sets 32474, 19804, 27562, 59856, 3331
 
 #Feature reductiion with mutual info classifier
 def feature_reduce_mic(X,Y,num_features_to_keep):
@@ -59,8 +51,8 @@ def main():
 	#print np.shape(X)
 	X = normalize(X, axis = 1, copy = False)
 	#print X
-	X=feature_reduce_chi2(X,Y,100)
-	#X= feature_reduce_mic(X,Y,100)
+	
+	X= feature_reduce_mic(X,Y,100)
 
 	#visualize_data(X, df, df_type)
 	X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size = 0.2)

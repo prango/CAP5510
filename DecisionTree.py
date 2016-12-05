@@ -32,8 +32,11 @@ def predict_output(clf, X):
 def main():
 	warnings.filterwarnings("ignore")
 	#get data in useful form [samples X features]
+
 	X, Y, df, df_type, class_names = get_data.get_data(
-		'/Users/GodSpeed/Documents/Courses/Bioinformatics/Project/Datasets/GSE19804_series_matrix.txt')
+		'/Users/Pranav/Google Drive/FALL 2016 SUBS/BIO-INFO/Project/data/GSE19804_series_matrix.txt')
+
+	#print class_names
 	#print np.shape(X)
 	X = normalize(X, axis = 1, copy = False)
 	#print X
@@ -45,10 +48,10 @@ def main():
 
 	clf = tree.DecisionTreeClassifier( )
 
-	#title = 'Learning Curve (KNeighborsClassifier) initial results'
-	#cv = ShuffleSplit(n_splits = 100, test_size = 0.2, random_state = 42)
-	#plc.plot_learning_curve(clf, title, X, Y.ravel(), ylim = (0.1,1.01), 
-	#		cv = cv, n_jobs = 1, scoring = 'accuracy')
+	title = 'Learning Curve (Decision Tree initial results'
+	cv = ShuffleSplit(n_splits = 100, test_size = 0.2, random_state = 42)
+	plc.plot_learning_curve(clf, title, X, Y.ravel(), ylim = (0.1,1.01), 
+			cv = cv, n_jobs = 1, scoring = 'accuracy')
 
 	trained_clf = train_model(clf, X_train, Y_train)
 	Y_pred = predict_output(trained_clf, X_test)

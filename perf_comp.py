@@ -28,16 +28,24 @@ def compare_methods(dataset):
 	#'Supervised variance by mean ratio', 
 	'Semi-supervised variance by mean ratio',
 	'Unsupervised variance by mean ratio', 
-	'Chi Square']
+	'Chi Square', 'ANOVA F-classifier']
 	classifiers = ['KNN', 'Naive Bayes', 'Decision Trees']
+	max_features = 500
+	f_measure_each = np.array([[0] * int(max_features/100)] * 
+		(len(classifiers) * (len(feature_selection) - 1)))
+	#print np.shape(f_measure_each)
+	#f_measure_each = []
+	counter = 0
+	method_combo = []
 
-	a = [[(0,0)] * len(classifiers)] * len(feature_selection)
+	a = [[(0,0)] * len(classifiers)] * (len(feature_selection))
+	#ignoring original features from feature_selection
 	performance = np.array(a)
 	#print performance
 	
 	for model in classifiers:
 		for feature_method in feature_selection:
-			for num_of_dims in range(100, 501, 100):
+			for num_of_dims in range(100, max_features + 1, 100):
 				fmeasure_expe = []
 				for iter in range(0,5):
 					X = Xtemp
@@ -59,8 +67,8 @@ def compare_methods(dataset):
 							0:num_of_dims])]
 					elif feature_method == 'Chi Square':
 						X = Naive_Bayes.feature_reduce(X, Y, num_of_dims)
-					#elif feature_method == 'Mutual Info Classifier':
-					#	X = DecisionTree.feature_reduce_mic(X, Y, num_of_dims)
+					elif feature_method == 'ANOVA F-classifier':
+						X = DecisionTree.feature_reduce_f_class_if(X, Y, num_of_dims)
 
 					#splitting data into training and testing set
 					X_train, X_test, Y_train, Y_test = train_test_split(X, Y, 
@@ -84,8 +92,12 @@ def compare_methods(dataset):
 					fmeasure_expe.append(fmeasure)
 
 				fmeasure = np.mean(fmeasure_expe) * 100
-				col = classifiers.index(model)
 				row = feature_selection.index(feature_method)
+				col = classifiers.index(model)
+
+				if feature_method != 'Original Features':	#storing f-measure for num_of_dims
+					f_measure_each[counter][int(num_of_dims/100) - 1] = fmeasure
+
 				
 				if fmeasure > performance[row][col][0]:
 					performance[row][col][0] = fmeasure
@@ -94,11 +106,21 @@ def compare_methods(dataset):
 					else:
 						performance[row][col][1] = num_of_dims
 
-	print performance
-	return performance, feature_selection, classifiers
+			if feature_method != 'Original Features':
+				counter = counter + 1
+				method_combo.append(model + '|' + feature_method)
 
-def plot_table(performance, feature_selection, classifiers, dataset, normalize 
-	= False, cmap = plt.cm.Blues):
+	method_combo = np.array(method_combo)
+	print performance
+	#print f_measure_each
+	f_measure_dims = pd.DataFrame(data = f_measure_each, 
+		columns = np.arange(100, max_features + 1, 100),
+		index = method_combo)
+	print f_measure_dims
+	return performance, feature_selection, classifiers, f_measure_dims
+
+def plot_table(performance, feature_selection, classifiers, dataset, 
+	f_measure_dims, normalize = False, cmap = plt.cm.Blues):
     plt.figure()
     plt.title("Feature selection method versus classification model for GSE" + 
     	dataset)
@@ -120,13 +142,21 @@ def plot_table(performance, feature_selection, classifiers, dataset, normalize
     plt.xlabel('Classification Methods')
     plt.show()
 
+    #plt.figure()
+    f_measure_dims.plot(colormap = plt.cm.jet)
+    plt.title('Performance Rate comparison for Feature Selection Method plus Classifying model GSE' + dataset)
+    plt.xlabel('Number of features selected')
+    plt.ylabel('Accuracy %')
+    #ax.legend_.remove()
+    plt.show()
+
 	
 
 def main(argv):
 	warnings.filterwarnings("ignore")
 	script, dataset = argv
-	[performance, feature_selection, classifiers] = compare_methods(dataset)		#comparing performance
-	plot_table(performance, feature_selection, classifiers, dataset)
+	[performance, feature_selection, classifiers, f_measure_dims] = compare_methods(dataset)		#comparing performance
+	plot_table(performance, feature_selection, classifiers, dataset, f_measure_dims.transpose())
 
 
 if __name__ == "__main__":

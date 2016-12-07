@@ -1,6 +1,7 @@
 """This is an implementaion of K nearest neighbors, before which we are analyzing 
 the data also in the same script"""
 
+import sys
 import pandas as pd
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
@@ -11,13 +12,14 @@ import get_data
 import plot_learning_curve as plc
 import plot_confusion_matrix as pcm
 import matplotlib.pyplot as plt
+import matplotlib
 from pandas.tools.plotting import parallel_coordinates, radviz
 import warnings
 
 #using geo data sets GSE... 32474, 19804, 27562, 59856, 33315
 
 #visualize data
-def visualize_data(X, df, df_type):
+def visualize_data(X, df, df_type, dataset):
 
 	"""checking the variance, mean and standard deviation of features"""
 	variance = np.var(X, axis = 0)
@@ -33,17 +35,17 @@ def visualize_data(X, df, df_type):
 	plt.plot(xlength, variance)
 	plt.ylabel('Variance')
 	plt.xlabel('Gene probe')
-	plt.title('Variance of expression level of the genes')
+	plt.title('Variance of gene expression level in GSE' + dataset)
 	plt.show()
 
 	"""visualizing the separatability of 8 top most variant features"""
 	features = dv.loc['Probe',:]
-	featuresForGraph = features[0:8]
+	featuresForGraph = features[0:6]
 	plt.figure()
 	dfPlot = df.loc[:, featuresForGraph]
 	data = pd.concat([dfPlot, df_type], axis = 1)
 	parallel_coordinates(data, '!Sample_title', colormap = 'jet')
-	plt.title('8 Genes with most variant expression level')
+	plt.title('6 Genes with most variant expression level in GSE' + dataset)
 	plt.xlabel('Gene probe')
 	plt.ylabel('Variance')
 	plt.show()
@@ -52,7 +54,7 @@ def visualize_data(X, df, df_type):
 	using normalized values""" 
 	plt.figure();
 	radviz(data, '!Sample_title')
-	plt.title('8 Genes with most variant expression level')
+	plt.title('8 Genes with most variant expression level in GSE' + dataset)
 	#plt.xlabel('Normalized')
 	plt.tick_params(axis = 'both', bottom = 'off', left = 'off', 
 		labelbottom  = 'off', labelleft = 'off')
@@ -60,13 +62,13 @@ def visualize_data(X, df, df_type):
 
 	"""visualizing the seperability of 8 least variant features"""
 	features = dv.loc['Probe',:]
-	featuresForGraph = features.tail(8)
+	featuresForGraph = features.tail(6)
 
 	plt.figure()
 	dfPlot = df.loc[:, featuresForGraph]
 	data = pd.concat([dfPlot, df_type], axis = 1)
 	parallel_coordinates(data, '!Sample_title', colormap = 'jet')
-	plt.title('8 Genes with least variant expression level')
+	plt.title('6 Genes with least variant expression level in GSE'+dataset)
 	plt.xlabel('Gene probe')
 	plt.ylabel('Variance')
 	plt.show()
@@ -75,7 +77,7 @@ def visualize_data(X, df, df_type):
 	normalized values"""
 	plt.figure();
 	radviz(data, '!Sample_title')
-	plt.title('8 Genes with least variant expression level')
+	plt.title('8 Genes with least variant expression level in GSE'+dataset)
 	plt.tick_params(axis = 'both', bottom = 'off', left = 'off', 
 		labelbottom  = 'off', labelleft = 'off')
 	plt.show()
@@ -100,7 +102,7 @@ def feature_select_var(X, Y, df_type, class_names):
 		feature_dist = abs(np.subtract(feature_dist, class_mean[i,:]))
 	feature_importance = pd.DataFrame(abs(np.sum(class_variance, axis = 0)/feature_dist))
 			#the lower, the better
-	feature_importance.sort_values(0, axis = 0, ascending = True, 
+	feature_importance.sort_values(0, axis = 0, ascending = False, 
 		inplace = True)
 	feature_importance_order = pd.DataFrame(feature_importance.axes)
 	feature_importance_order = np.array(feature_importance_order.loc[0,:])
@@ -194,13 +196,19 @@ def predict_output(clf, X):
 	return Y_pred
 
 
-def main():
+def main(argv):
+	script, dataset = argv
 	warnings.filterwarnings("ignore")
+	font = {'family' : 'normal',
+        #'weight' : 'bold',
+        'size'   : 20}
+
+	matplotlib.rc('font', **font)
 	#get data in useful form [samples X features]
 	X, Y, df, df_type, class_names = get_data.get_data(
-		'/Users/GodSpeed/Documents/Courses/Bioinformatics/Project/Datasets/GSE59856_series_matrix.txt')
+		'/Users/GodSpeed/Documents/Courses/Bioinformatics/Project/Datasets/GSE' + dataset + '_series_matrix.txt')
 	
-	#visualize_data(X, df, df_type)
+	visualize_data(X, df, df_type, dataset)
 
 	X = normalize(X, axis = 1, copy = False)
 	#X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size = 0.2)
@@ -231,6 +239,6 @@ def main():
 	print "F1-score of classification is ", np.around(f1_score(Y_test, Y_pred, 
 		average = 'weighted'), decimals = 2)
 
-#if __name__ == "__main__":
-#	main()
+if __name__ == "__main__":
+	main(sys.argv)
 #main(dims)

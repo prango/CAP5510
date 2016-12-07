@@ -10,7 +10,7 @@ from sklearn.model_selection import cross_val_score
 from sklearn.metrics import accuracy_score, confusion_matrix, f1_score
 from sklearn.feature_selection import SelectFromModel 
 from sklearn.feature_selection.univariate_selection import SelectKBest
-from sklearn.feature_selection import chi2 , mutual_info_classif
+from sklearn.feature_selection import chi2 , f_classif
 import get_data
 import plot_learning_curve as plc
 import plot_confusion_matrix as pcm
@@ -21,9 +21,9 @@ import warnings
 #using data sets 32474, 19804, 27562, 59856, 3331
 
 #Feature reductiion with mutual info classifier
-def feature_reduce_mic(X,Y,num_features_to_keep):
+def feature_reduce_f_class_if(X,Y,num_features_to_keep):
     
-    test = SelectKBest(score_func= mutual_info_classif, k=num_features_to_keep)
+    test = SelectKBest(score_func= f_classif, k=num_features_to_keep)
     fit = test.fit(X,Y)
     
     #return the data with reduced features 
@@ -52,7 +52,7 @@ def main():
 	X = normalize(X, axis = 1, copy = False)
 	#print X
 	
-	X= feature_reduce_mic(X,Y,100)
+	X= feature_reduce_f_classif(X,Y,100)
 
 	#visualize_data(X, df, df_type)
 	X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size = 0.2)

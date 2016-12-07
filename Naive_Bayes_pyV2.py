@@ -36,7 +36,7 @@ def main():
     warnings.filterwarnings("ignore")
     #get data in useful form [samples X features]
     X, Y, df, df_type, class_names = get_data.get_data(
-        'G:/CAP5510/KNeighborsClassifier/data/GSE33315_series_matrix.txt')
+        '/Users/GodSpeed/Documents/Courses/Bioinformatics/Project/Datasets/GSE33315_series_matrix.txt')
     
     df.dropna(axis = 1, how = 'any', inplace = True)
    
@@ -61,4 +61,4 @@ def main():
     #print trained_clf.kneighbors(X, n_neighbors = 3)
     #print clf.get_params()
 
-main()
+#main()

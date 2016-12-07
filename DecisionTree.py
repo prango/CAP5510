@@ -77,4 +77,4 @@ def main():
 	#print trained_clf.kneighbors(X, n_neighbors = 3)
 	#print clf.get_params()
 
-main()
+#main()

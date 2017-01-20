@@ -29,7 +29,7 @@ def get_data(filename):
 	df = (pd.read_csv(filename, sep = "\t", skiprows = samples_begin + 1,
 		 header = None)).transpose()
 	df.columns = df.iloc[0]
-	df = df[1:]
+	df = df[1:
 	df.dropna(axis = 1, how = 'all', inplace = True)
 
 	"""dropping non-classifiable data such as post-surgery data, since we don't 
@@ -66,7 +66,7 @@ def get_data(filename):
 		#try:
 		class_find = df_type[df_type['!Sample_title'].str.contains
 		(classes[i]) == True]
-		#print class_find.size
+		print class_find.size
 		if class_find.size != 0:
 			df_type.replace(to_replace = class_find, value = classes_to_names[classes[i]], 
 				inplace = True)

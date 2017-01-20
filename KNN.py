@@ -40,12 +40,12 @@ def visualize_data(X, df, df_type, dataset):
 
 	"""visualizing the separatability of 8 top most variant features"""
 	features = dv.loc['Probe',:]
-	featuresForGraph = features[0:6]
+	featuresForGraph = features[0:8]
 	plt.figure()
 	dfPlot = df.loc[:, featuresForGraph]
 	data = pd.concat([dfPlot, df_type], axis = 1)
 	parallel_coordinates(data, '!Sample_title', colormap = 'jet')
-	plt.title('6 Genes with most variant expression level in GSE' + dataset)
+	plt.title('8 Genes with most variant expression level in GSE' + dataset)
 	plt.xlabel('Gene probe')
 	plt.ylabel('Variance')
 	plt.show()
@@ -62,13 +62,13 @@ def visualize_data(X, df, df_type, dataset):
 
 	"""visualizing the seperability of 8 least variant features"""
 	features = dv.loc['Probe',:]
-	featuresForGraph = features.tail(6)
+	featuresForGraph = features.tail(8)
 
 	plt.figure()
 	dfPlot = df.loc[:, featuresForGraph]
 	data = pd.concat([dfPlot, df_type], axis = 1)
 	parallel_coordinates(data, '!Sample_title', colormap = 'jet')
-	plt.title('6 Genes with least variant expression level in GSE'+dataset)
+	plt.title('8 Genes with least variant expression level in GSE'+dataset)
 	plt.xlabel('Gene probe')
 	plt.ylabel('Variance')
 	plt.show()

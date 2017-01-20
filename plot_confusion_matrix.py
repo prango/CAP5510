@@ -43,7 +43,7 @@ def plot_confusion_matrix(cm, classes, normalize=False,
     plt.xlabel('Predicted label')
 
 # Compute confusion matrix
-def main(Y_test, Y_pred, class_names):
+def main(Y_test, Y_pred,class_names):
   cnf_matrix = confusion_matrix(Y_test, Y_pred)
   np.set_printoptions(precision=2)
 
